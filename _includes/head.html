@@ -1,48 +1,81 @@
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+{% include calculate_relative_base.html %}
+{% include escape-404.html %}
 
-{% seo %}
+<head>
+	<meta charset="utf-8">
+	<meta name="baidu-site-verification" content="code-WfIED4DPPU" />
+	<title>{% if page.title %}{{page.title}} - {{site.title}}{% else %}{{site.title}}{% endif %}</title>
+	<link rel="canonical" href="{{ site.url }}{{ page.url }}">
+	<meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	{% include SEO.html %}
+	<!-- Windows Phone -->
+	<meta name="msapplication-navbutton-color" content="#311e3e">
+	<!-- iOS Safari -->
+	<meta name="apple-mobile-web-app-status-bar-style" content="#311e3e">
+	<!-- Google Fonts -->
+	<link rel="preconnect" href="https://fonts.gstatic.com" />
+	<style>
+/* latin */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/lora/v17/0QIvMX1D_JOuMwr7I_FMl_E.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  src: url(https://fonts.gstatic.com/s/lora/v17/0QIvMX1D_JOuMwr7I_FMl_E.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 200;
+  src: url(https://fonts.gstatic.com/s/sourcesanspro/v14/6xKydSBYKcSV-LCoeQqfX1RYOo3i94_wlxdu3cOWxw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/sourcesanspro/v14/6xK3dSBYKcSV-LCoeQqfX1RYOo3qOK7lujVj9w.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 700;
+  src: url(https://fonts.gstatic.com/s/sourcesanspro/v14/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwlxdu3cOWxw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+	</style>
+	<!-- <link href="https://fonts.googleapis.com/css?family=Lora:400,600|Source+Sans+Pro:200,400,700" rel="stylesheet"> -->
 
-{% feed_meta %}
+	<!--百度统计 -->
+	<script>
+		var _hmt = _hmt || [];
+		(function() {
+		  var hm = document.createElement("script");
+		  hm.src = "https://hm.baidu.com/hm.js?8937b02561818ce497185cb9fc267e8c";
+		  var s = document.getElementsByTagName("script")[0];
+		  s.parentNode.insertBefore(hm, s);
+		})();
+	</script>
 
-{% if jekyll.environment == 'production' and site.google_analytics %}
-  {% include google-analytics.html %}
-{% endif %}
-
-{% if page.math %}
-  {% include mathjax.html %}
-{% endif %}
-
-<!-- Google Fonts -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open%20Sans|Roboto|Roboto%20Slab|Inconsolata|Dancing%20Script|Noto%20Sans%20SC|Noto%20Sans%20TC|Noto%20Serif%20SC|Noto%20Serif%20TC|Ma%20Shan%20Zheng">
-
-<link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
-<link rel="stylesheet" href="{{ '/assets/css/skin.css' | relative_url }}">
-
-<!-- Begin selecting skin -->
-{% unless site.skin %}
-  <script>
-    const hour = (new Date()).getHours();
-    let filename = "";
-    if (hour >= 5 && hour < 7) {
-      filename = "{{ '/assets/css/skin-sunrise.css' | relative_url }}";
-    } else if (hour >= 7 && hour < 17) {
-      filename = "{{ '/assets/css/skin-daylight.css' | relative_url }}";
-    } else if (hour >= 17 && hour < 19) {
-      filename = "{{ '/assets/css/skin-sunset.css' | relative_url }}";
-    } else {
-      filename = "{{ '/assets/css/skin-midnight.css' | relative_url }}";
-    }
-    const elem = document.createElement("link");
-    elem.setAttribute("rel", "stylesheet");
-    elem.setAttribute("type", "text/css");
-    elem.setAttribute("href", filename);
-    document.getElementsByTagName("head")[0].appendChild(elem);
-  </script>
-{% endunless %}
-<!-- End selecting skin -->
-
-<script async src="https://use.fontawesome.com/releases/v5.0.12/js/all.js"></script>
-
-{% include custom-head.html %}
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="{{ relativebase }}assets/fonts/font-awesome/css/font-awesome.min.css">
+	<!-- Styles -->
+	<link rel="stylesheet" href="{{ relativebase }}assets/css/main.css">
+	{% include favicon.html %}
+	{% if page.layout == 'post' %}
+	<link rel="stylesheet" href="{{ relativebase }}assets/css/highlighter/{{ site.highlight_theme }}.css">
+	{% endif %}
+</head>
