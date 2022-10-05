@@ -81,7 +81,7 @@ main {
  * `article` contexts in Chrome, Firefox, and Safari.
  */
 
-h2 {
+h1 {
   font-size: 2em;
   margin: 0.67em 0;
 }
@@ -419,7 +419,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--accent-dark);
 }
 
-h2 {
+h1 {
   font-size: 4rem;
   font-weight: var(--font2-regular);
   line-height: 1;
