@@ -11,6 +11,10 @@ author: Bobo Du
 description: "KVM-intel vmx代码阅读记录"
 ---
 
+### 整体架构
+
+![KVM整体架构流程图](./assets/img/posts/kvm/KVM整体架构流程图.jpg)
+
 ### 整体执行流程
 
 ![KVM流程图](./assets/img/posts/kvm/KVM流程图.jpg)
