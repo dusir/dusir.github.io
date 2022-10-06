@@ -5,7 +5,7 @@ show_date: true
 title: "vmx 代码阅读记录"
 date: 2018-10-06
 img: posts/20210420/post8-rembrandt.jpg
-tags: [Hardware]
+tags: [KVM]
 category: opinion
 author: Bobo Du
 description: "KVM-intel vmx代码阅读记录"
