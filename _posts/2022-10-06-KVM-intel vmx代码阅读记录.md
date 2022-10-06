@@ -70,6 +70,7 @@ vmx和svm只能选择一种，kvm_arch_init()中对kvm_x86_ops做了检查。
 
    调用kvm_mmu_module_init初始化mmu, 创建了3个mem_cache，这里还注册了一个mmu_shrinker用于内存不足时的回收。
 ```
+arm的：
 /**
  * Initialize Hyp-mode and memory mappings on all CPUs.
  */
@@ -84,7 +85,7 @@ int kvm_arch_init(void *opaque)
         }
 
         for_each_online_cpu(cpu) {
-                smp_call_function_single(cpu, check_kvm_target_cpu, &ret, 1);
+                smp_call_function_single(cpu, check_kvm_target_cpu, &ret, 1);//在smp系统中检查每个cpu是否支持虚拟化。
                 if (ret < 0) {
                         kvm_err("Error, CPU %d not supported!\n", cpu);
                         return -ENODEV;
@@ -106,6 +107,51 @@ int kvm_arch_init(void *opaque)
 out_err:
         return err;
 }
+```
+
+```
+x86的：
+int kvm_arch_init(void *opaque)
+{
+        int r;
+        struct kvm_x86_ops *ops = (struct kvm_x86_ops *)opaque;
+
+        if (kvm_x86_ops) {
+                printk(KERN_ERR "kvm: already loaded the other module\n");
+                r = -EEXIST;
+                goto out;
+        }
+
+        if (!ops->cpu_has_kvm_support()) {
+                printk(KERN_ERR "kvm: no hardware support\n");
+                r = -EOPNOTSUPP;
+                goto out;
+        }
+        if (ops->disabled_by_bios()) {
+                printk(KERN_ERR "kvm: disabled by bios\n");
+                r = -EOPNOTSUPP;
+                goto out;
+        }
+
+        r = -ENOMEM;
+        shared_msrs = alloc_percpu(struct kvm_shared_msrs);
+        if (!shared_msrs) {
+                printk(KERN_ERR "kvm: failed to allocate percpu kvm_shared_msrs\n");
+                goto out;
+        }
+
+        r = kvm_mmu_module_init();
+        if (r)
+                goto out_free_percpu;
+
+        kvm_set_mmio_spte_mask();
+        kvm_init_msr_list();
+
+        kvm_x86_ops = ops;
+        kvm_mmu_set_mask_ptes(PT_USER_MASK, PT_ACCESSED_MASK,
+                        PT_DIRTY_MASK, PT64_NX_MASK, 0);
+
+        kvm_timer_init();
 ```
 
 7.kvm_irqfd_init
@@ -156,7 +202,8 @@ int kvm_irqfd_init(void)
 ```
 
 10.misc_register
-注册设备，用于上层操作。
+misc_register用于注册字符设备驱动，在kvm_init函数中调用此函数完成注册，以便上层应用程序来使用kvm模块：
+
 ```
         kvm_chardev_ops.owner = module;
         kvm_vm_fops.owner = module;
@@ -167,6 +214,22 @@ int kvm_irqfd_init(void)
                 printk(KERN_ERR "kvm: misc device register failed\n");
                 goto out_unreg;
         }
+```
+具体的流程：
+![kvm字符设备流程图](./assets/img/posts/kvm/kvm字符设备流程图.jpg)
+
+字符设备的注册分为三级，分别代表kvm, vm, vcpu，上层最终使用底层的服务都是通过ioctl函数来操作；
+
+kvm：代表kvm内核模块，可以通过kvm_dev_ioctl来管理kvm版本信息，以及vm的创建等；
+vm：虚拟机实例，可以通过kvm_vm_ioctl函数来创建vcpu，设置内存区间，分配中断等；
+vcpu：代表虚拟的CPU，可以通过kvm_vcpu_ioctl来启动或暂停CPU的运行，设置vcpu的寄存器等；
+以Qemu的使用为例：
+
+```
+1.打开/dev/kvm设备文件；
+2.ioctl(xx, KVM_CREATE_VM, xx)创建虚拟机对象；
+3.ioctl(xx, KVM_CREATE_VCPU, xx)为虚拟机创建vcpu对象；
+4.ioctl(xx, KVM_RUN, xx)让vcpu运行起来；
 ```
 
 11.register_syscore_ops
