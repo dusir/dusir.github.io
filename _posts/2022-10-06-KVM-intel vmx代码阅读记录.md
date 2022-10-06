@@ -64,14 +64,53 @@ vmx和svm只能选择一种，kvm_arch_init()中对kvm_x86_ops做了检查。
 
 5. kvm_init()调用特定CPU实现的kvm_arch_init()去做初始化（x86.c）。
 
-6. 接着是调用kvm_arch_init()
+6. kvm_arch_init()
 
    检查硬件是否支持虚拟化、BIOS是否禁用虚拟化。
 
-   调用kvm_mmu_module_init初始化mmu, 创建了3个mem_cache，这里还注册了一个mmu_shrinker用于内存不足时的回收（以后再看）。
+   调用kvm_mmu_module_init初始化mmu, 创建了3个mem_cache，这里还注册了一个mmu_shrinker用于内存不足时的回收。
+```
+/**
+ * Initialize Hyp-mode and memory mappings on all CPUs.
+ */
+int kvm_arch_init(void *opaque)
+{
+        int err;
+        int ret, cpu;
+
+        if (!is_hyp_mode_available()) {  //确定hypervisor模式是否可用
+                kvm_err("HYP mode not available\n");
+                return -ENODEV;
+        }
+
+        for_each_online_cpu(cpu) {
+                smp_call_function_single(cpu, check_kvm_target_cpu, &ret, 1);
+                if (ret < 0) {
+                        kvm_err("Error, CPU %d not supported!\n", cpu);
+                        return -ENODEV;
+                }
+        }
+
+        err = init_hyp_mode(); //初始化hypervisor，本函数的主要目的就是为hypervisor分配页表pgd，该函数将与finalize_hyp_mode后边一起介绍
+        if (err)
+                goto out_err;
+
+        err = register_cpu_notifier(&hyp_init_cpu_nb);
+        if (err) {
+                kvm_err("Cannot register HYP init CPU notifier (%d)\n", err);
+                goto out_err;
+        }
+
+        kvm_coproc_table_init();
+        return 0;
+out_err:
+        return err;
+}
+```
 
 7.kvm_irqfd_init
 创建工作队列，用于处理vm的shudown事件。
+为eventfd创建一个全局的工作队列，它用于在虚拟机被关闭时，关闭所有与其相关的irqfd，并等待该操作完成。
 ```
 /*
  * create a host-wide workqueue for issuing deferred shutdown requests
@@ -89,14 +128,14 @@ int kvm_irqfd_init(void)
 ```
 
 8.kvm_vcpu_cache
-创建用于分配kvm vcpu的slab缓存
+创建用于分配kvm vcpu的特定的slab缓存
 ```
       kvm_vcpu_cache = kmem_cache_create("kvm_vcpu", vcpu_size, vcpu_align,
                                            0, NULL);
 ```
 
 9.kvm_async_pf_init
-创建用于分配kvm_async_pf的slab缓存
+创建用于分配kvm_async_pf特定的slab缓存
 ```
         r = kvm_async_pf_init();
         if (r)
