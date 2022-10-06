@@ -70,3 +70,82 @@ vmx和svm只能选择一种，kvm_arch_init()中对kvm_x86_ops做了检查。
 
    调用kvm_mmu_module_init初始化mmu, 创建了3个mem_cache，这里还注册了一个mmu_shrinker用于内存不足时的回收（以后再看）。
 
+7.kvm_irqfd_init
+创建工作队列，用于处理vm的shudown事件。
+```
+/*
+ * create a host-wide workqueue for issuing deferred shutdown requests
+ * aggregated from all vm* instances. We need our own isolated single-thread
+ * queue to prevent deadlock against flushing the normal work-queue.
+ */
+int kvm_irqfd_init(void)
+{
+        irqfd_cleanup_wq = create_singlethread_workqueue("kvm-irqfd-cleanup");
+        if (!irqfd_cleanup_wq)
+                return -ENOMEM;
+
+        return 0;
+}
+```
+
+8.kvm_vcpu_cache
+创建用于分配kvm vcpu的slab缓存
+```
+      kvm_vcpu_cache = kmem_cache_create("kvm_vcpu", vcpu_size, vcpu_align,
+                                           0, NULL);
+```
+
+9.kvm_async_pf_init
+创建用于分配kvm_async_pf的slab缓存
+```
+        r = kvm_async_pf_init();
+        if (r)
+                goto out_free;
+                
+        ------->具体实现如下：
+        static struct kmem_cache *async_pf_cache;
+
+        int kvm_async_pf_init(void)
+        {
+                async_pf_cache = KMEM_CACHE(kvm_async_pf, 0);
+                
+                if (!async_pf_cache)
+                        return -ENOMEM;
+        
+                return 0;
+        }
+```
+
+10.misc_register
+注册设备，用于上层操作。
+```
+        kvm_chardev_ops.owner = module;
+        kvm_vm_fops.owner = module;
+        kvm_vcpu_fops.owner = module;
+
+        r = misc_register(&kvm_dev);
+        if (r) {
+                printk(KERN_ERR "kvm: misc device register failed\n");
+                goto out_unreg;
+        }
+```
+
+11.register_syscore_ops
+注册挂起、恢复时的操作函数
+
+12.kvm sched
+```
+        kvm_preempt_ops.sched_in = kvm_sched_in;
+        kvm_preempt_ops.sched_out = kvm_sched_out;
+```
+
+13.kvm debugfs
+```
+        r = kvm_init_debug();
+        if (r) {
+                printk(KERN_ERR "kvm: create debugfs files failed\n");
+                goto out_undebugfs;
+        }
+
+        return 0;
+```
