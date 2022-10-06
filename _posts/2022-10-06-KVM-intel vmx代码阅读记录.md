@@ -13,6 +13,6 @@ description: "KVM-intel vmx代码阅读记录"
 
 ### 整体执行流程
 
-![The next Rembrandt](./assets/img/pos/kvm/KVM流程图.jpg)
+![KVM流程图](./assets/img/posts/kvm/KVM流程图.jpg)
 
 ### Linux KVM Intel 入口函数？
