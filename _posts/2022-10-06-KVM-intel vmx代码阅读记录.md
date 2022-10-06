@@ -22,9 +22,11 @@ description: "KVM-intel vmx代码阅读记录"
 1. 读取扩展特性寄存器(MSR_EFER)，保存到全局静态变量host_efer中；
 MSR_EFER说明：
    
+```
 /* x86-64 specific MSRs */
 
 \#define MSR_EFER                0xc0000080 /* extended feature register */
+```
 
 2. 初始化保存全局共享的msr寄存器数组
 代码如下：
